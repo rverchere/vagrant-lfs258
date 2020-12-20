@@ -42,22 +42,23 @@ Vagrant.configure("2") do |config|
       sudo cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
       chown vagrant: /home/vagrant/.kube/config
 
-      sudo -u vagrant kubectl apply -f /vagrant/calico.yaml
+      sudo -u vagrant kubectl create -f /vagrant/calico-tigera-operator.yaml
+      sudo -u vagrant kubectl create -f /vagrant/calico-custom-resources.yaml
 
       sudo apt-get install bash-completion -y
       sudo -u vagrant echo "source <(kubectl completion bash)" >> /home/vagrant/.bashrc
 
-      kubeadm config print init-defaults
+      sudo -u vagrant kubectl taint nodes --all node-role.kubernetes.io/master-
    SHELL
   end
 
   config.vm.define "k8sworker1" do |k8sworker1|
     k8sworker1.vm.hostname = "k8sworker1"
-    k8sworker1.vm.network :private_network, type: "dhcp"
+    k8sworker1.vm.network :private_network, ip: "192.168.56.11"
   end
   config.vm.define "k8sworker2" do |k8sworker2|
     k8sworker2.vm.hostname = "k8sworker2"
-    k8sworker2.vm.network :private_network, type: "dhcp"
+    k8sworker2.vm.network :private_network, ip: "192.168.56.12"
   end
 
 end

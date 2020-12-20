@@ -3,4 +3,7 @@ kind: ClusterConfiguration
 kubernetesVersion: 1.18.1
 controlPlaneEndpoint: "k8smaster:6443"
 networking:
-  podSubnet: 192.168.88.0/24
+  podSubnet: 172.88.0.0/16
+apiServer:
+  extraArgs:
+    advertise-address: 192.168.56.10
