@@ -11,6 +11,23 @@ Vagrant.configure("2") do |config|
     v.cpus = 1
   end
 
+  config.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get upgrade -y
+    apt-get install -y vim
+
+    apt-get install -y docker.io
+    systemctl enable docker
+
+    echo "deb  http://apt.kubernetes.io/  kubernetes-xenial  main" > /etc/apt/sources.list.d/kubernetes.list
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+    apt-get update
+    apt-get install -y kubeadm=1.18.1-00 kubelet=1.18.1-00 kubectl=1.18.1-00
+    apt-mark hold kubelet kubeadm kubectl
+
+    echo "192.168.56.10 k8smaster" >> /etc/hosts
+  SHELL
+
   config.vm.define "k8smaster", primary: true do |k8smaster|
     k8smaster.vm.hostname = "k8smaster"
     k8smaster.vm.network :private_network, ip: "192.168.56.10"
@@ -19,27 +36,18 @@ Vagrant.configure("2") do |config|
       vmaster.cpus = 2
     end
     k8smaster.vm.provision "shell", inline: <<-SHELL
-     apt-get update
-     apt-get upgrade -y
-     apt-get install -y vim
-     apt-get install -y docker.io
-     systemctl enable docker
-     echo "deb  http://apt.kubernetes.io/  kubernetes-xenial  main" > /etc/apt/sources.list.d/kubernetes.list
-     curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-     apt-get update
-     apt-get install -y kubeadm=1.18.1-00 kubelet=1.18.1-00 kubectl=1.18.1-00
-     apt-mark hold kubelet kubeadm kubectl
-     
-     echo "192.168.56.10 k8smaster >> /etc/hosts"
+      kubeadm init --config=/vagrant/kubeadm-config.yaml --upload-certs | tee /home/vagrant/kubeadm-init.out
 
-     kubeadm init --config=/vagrant/kubeadm-config.yaml --upload-certs | tee /home/vagrant/kubeadm-init.out 
-     sudo -u vagrant mkdir -p /home/vagrant/.kube
-     sudo cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
-     chown vagrant: $HOME/.kube/config
-     sudo -u vagrant kubectl apply -f /vagrant/calico.yaml
-     sudo apt-get install bash-completion -y
-     sudo -u vagrant echo "source <(kubectl completion bash)" >> /home/vagrant/.bashrc
+      sudo -u vagrant mkdir -p /home/vagrant/.kube
+      sudo cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
+      chown vagrant: /home/vagrant/.kube/config
 
+      sudo -u vagrant kubectl apply -f /vagrant/calico.yaml
+
+      sudo apt-get install bash-completion -y
+      sudo -u vagrant echo "source <(kubectl completion bash)" >> /home/vagrant/.bashrc
+
+      kubeadm config print init-defaults
    SHELL
   end
 
