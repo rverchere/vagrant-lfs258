@@ -30,6 +30,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "k8smaster", primary: true do |k8smaster|
     k8smaster.vm.hostname = "k8smaster"
+    k8smaster.vm.network "forwarded_port", guest: 8080, host: 8080
     k8smaster.vm.network :private_network, ip: "192.168.56.10"
     k8smaster.vm.provider "virtualbox" do |vmaster|
       vmaster.memory = 4096
