@@ -50,6 +50,8 @@ Vagrant.configure("2") do |config|
       sudo -u vagrant echo "source <(kubectl completion bash)" >> /home/vagrant/.bashrc
 
       sudo -u vagrant kubectl taint nodes --all node-role.kubernetes.io/master-
+      
+      snap install helm --classic
    SHELL
   end
 
